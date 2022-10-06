@@ -36,13 +36,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .map_err(|err| CustomError(format!("Error reading `{}`: {}", path, err)))?; -> could create custom error for more helpful error message
         instead use anyhow library to add nicer error message
         */
-    let mut reader = std::io::BufReader::new(f);
+    let reader = std::io::BufReader::new(f);
+    let writer = std::io::stdout();
 
-    let mut line: String = String::new();
-    let mut len = reader.read_line(&mut line)?;
-        
-
-
+    find_match(reader,writer,&args.pattern);
     /*
     Question mark on a Result enum turns into basically this:
     let len = match result {
@@ -50,16 +47,21 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         Err(error) => { panic!("Can't deal with {}, exit here", error); }
     };*/
 
-
-
-    while len > 0 {
-        if line.contains(&args.pattern) {
-            println!("{}",line);
-        }
-        line.clear();
-        len = reader.read_line(&mut line)?;
-    }
-
     Ok(())
 
+}
+
+
+
+fn find_match(mut reader: impl std::io::BufRead, mut writer: impl std::io::Write, pattern: &str){
+    let mut line: String = String::new();
+    let mut len = reader.read_line(&mut line).unwrap();
+
+    while len > 0 {
+        if line.contains(&pattern) {
+            writeln!(writer,"{}",line).expect("Failed to write line");
+        }
+        line.clear();
+        len = reader.read_line(&mut line).unwrap();
+    }
 }
