@@ -23,6 +23,17 @@ pub fn find_match(f: &std::fs::File, pattern: &str, writer: &mut impl std::io::W
 
 
 
+pub fn do_hard_work(){
+    let mut val: i128 = 0i128;
+    for i in 0i64..1000000{
+        let a: i64 = i + 3;
+        val += i128::from(a);
+    }
+    println!("{}", val);
+}
+
+
+
 
 
 

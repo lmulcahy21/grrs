@@ -31,7 +31,27 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut writer = std::io::BufWriter::new(std::io::stdout());
 
     grrs::find_match(&f, &args.pattern, &mut writer);
+    /* PROGRESS BAR
+    let pb = indicatif::ProgressBar::new(100);
+    for i in 0..100 {
+        grrs::do_hard_work();
+        pb.println(format!("[+] finished #{}", i));
+        pb.inc(1);
+    }
+    pb.finish_with_message("done");*/
 
+
+////Logging
+/// 
+/// 
+/* 
+    use log::{info,warn};
+    env_logger::init();
+    info!("Starting up");
+    warn!("oops, nothing done");
+
+    //env RUST_LOG=info cargo run
+*/
     Ok(())
 
 
