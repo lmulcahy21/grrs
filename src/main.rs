@@ -1,6 +1,6 @@
-
+#![allow(unused)]
 use clap::Parser;
-use std::io::prelude::*;
+use std::{io::{prelude::*, Sink, BufWriter}, process::exit};
 use anyhow::{Context, Result};
 
 
@@ -21,47 +21,34 @@ https://docs.rs/clap/
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     //https://doc.rust-lang.org/1.39.0/std/env/fn.args.html
-    let args: Cli = Cli::parse();
-    println!("{} {}",args.pattern,args.path.display());
 
-    /*
-    let content: String = std::fs::read_to_string(&args.path).expect("Failed to read file"); -> initial implementation; not blazingly fast
-    attempting some optimization through ReadBuf instead of reading whole file into memory
-    */
+    let args = Cli::parse();
+
+    let f = std::fs::File::open(&args.path)?;
+
+    println!("{:?}", args);
+
+    let mut writer = std::io::BufWriter::new(std::io::stdout());
+
+    grrs::find_match(&f, &args.pattern, &mut writer);
+
+    Ok(())
 
 
-    
-    let f = std::fs::File::open(&args.path).with_context(|| format!("could not read file {}", args.path.display()))?;
-        /*
-        .map_err(|err| CustomError(format!("Error reading `{}`: {}", path, err)))?; -> could create custom error for more helpful error message
-        instead use anyhow library to add nicer error message
-        */
-    let reader = std::io::BufReader::new(f);
-    let writer = std::io::stdout();
 
-    find_match(reader,writer,&args.pattern);
     /*
     Question mark on a Result enum turns into basically this:
     let len = match result {
         Ok(len) => { len },
         Err(error) => { panic!("Can't deal with {}, exit here", error); }
     };*/
+        
+    //let f = std::fs::File::open(&args.path).with_context(|| format!("could not read file {}", args.path.display()))?;
+        /*
+        .map_err(|err| CustomError(format!("Error reading `{}`: {}", path, err)))?; -> could create custom error for more helpful error message
+        instead use anyhow library to add nicer error message
+        */
+    //let reader = std::io::BufReader::new(f);
 
-    Ok(())
 
-}
-
-
-
-fn find_match(mut reader: impl std::io::BufRead, mut writer: impl std::io::Write, pattern: &str){
-    let mut line: String = String::new();
-    let mut len = reader.read_line(&mut line).unwrap();
-
-    while len > 0 {
-        if line.contains(&pattern) {
-            writeln!(writer,"{}",line).expect("Failed to write line");
-        }
-        line.clear();
-        len = reader.read_line(&mut line).unwrap();
-    }
 }
