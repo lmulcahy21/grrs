@@ -1,6 +1,6 @@
-
+#![allow(unused)]
 use clap::Parser;
-use std::io::prelude::*;
+use std::{io::{prelude::*, Sink, BufWriter}, process::exit, path::PathBuf};
 use anyhow::{Context, Result};
 
 
@@ -21,26 +21,39 @@ https://docs.rs/clap/
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     //https://doc.rust-lang.org/1.39.0/std/env/fn.args.html
-    let args: Cli = Cli::parse();
-    println!("{} {}",args.pattern,args.path.display());
 
-    /*
-    let content: String = std::fs::read_to_string(&args.path).expect("Failed to read file"); -> initial implementation; not blazingly fast
-    attempting some optimization through ReadBuf instead of reading whole file into memory
-    */
+    let args = Cli::parse();
+
+    let f = std::fs::File::open(&args.path)?;
+
+    println!("{:?}", args);
+
+    let mut writer = std::io::BufWriter::new(std::io::stdout());
+
+    grrs::find_match(&f, &args.pattern, &mut writer);
+    /* PROGRESS BAR
+    let pb = indicatif::ProgressBar::new(100);
+    for i in 0..100 {
+        grrs::do_hard_work();
+        pb.println(format!("[+] finished #{}", i));
+        pb.inc(1);
+    }
+    pb.finish_with_message("done");*/
 
 
-    
-    let f = std::fs::File::open(&args.path).with_context(|| format!("could not read file {}", args.path.display()))?;
-        /*
-        .map_err(|err| CustomError(format!("Error reading `{}`: {}", path, err)))?; -> could create custom error for more helpful error message
-        instead use anyhow library to add nicer error message
-        */
-    let mut reader = std::io::BufReader::new(f);
+////Logging
+/// 
+/// 
+/* 
+    use log::{info,warn};
+    env_logger::init();
+    info!("Starting up");
+    warn!("oops, nothing done");
 
-    let mut line: String = String::new();
-    let mut len = reader.read_line(&mut line)?;
-        
+    //env RUST_LOG=info cargo run
+*/
+    Ok(())
+
 
 
     /*
@@ -49,17 +62,40 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         Ok(len) => { len },
         Err(error) => { panic!("Can't deal with {}, exit here", error); }
     };*/
+        
+    //let f = std::fs::File::open(&args.path).with_context(|| format!("could not read file {}", args.path.display()))?;
+        /*
+        .map_err(|err| CustomError(format!("Error reading `{}`: {}", path, err)))?; -> could create custom error for more helpful error message
+        instead use anyhow library to add nicer error message
+        */
+    //let reader = std::io::BufReader::new(f);
 
 
+}
 
-    while len > 0 {
-        if line.contains(&args.pattern) {
-            println!("{}",line);
-        }
-        line.clear();
-        len = reader.read_line(&mut line)?;
-    }
+
+#[test]
+fn test_find_match() -> Result<(), Box<dyn std::error::Error>> {
+    use assert_cmd::prelude::*; // Add methods on commands
+    use std::process::Command; // Run programsa
+    use std::fs::File;
+    use predicates::prelude::*; // Used for writing assertions
+
+
+    let mut f = File::create("test_file.txt")?;
+
+    f.write_all(b"This is a test file. Testing matching patterns.\npattern1\n pattern2 \n012934102934 \n\n\n temp");
+    let mut writer = std::io::BufWriter::new(Vec::new());
+    grrs::find_match(&f,"NOT_IN_STRING",&mut writer)?;
+    assert_eq!(String::from_utf8(writer.into_inner()?)?, String::from(""));
+    //writer is now moved, so make new 
+    let mut writer = std::io::BufWriter::new(Vec::new());
+    grrs::find_match(&f,"temp",&mut writer)?;
+    assert_eq!(&writer.into_inner()?, &Vec::from("temp"));
+
 
     Ok(())
+
+
 
 }
