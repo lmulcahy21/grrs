@@ -24,13 +24,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let args = Cli::parse();
 
-    let f = std::fs::File::open(&args.path)?;
+    let mut f = std::fs::File::open(&args.path)
+        .with_context(|| format!("could not read file: `{}`",args.path.display()))?;
 
     println!("{:?}", args);
 
     let mut writer = std::io::BufWriter::new(std::io::stdout());
 
-    grrs::find_match(&f, &args.pattern, &mut writer);
+    grrs::find_match(&mut f, &args.pattern, &mut writer);
     /* PROGRESS BAR
     let pb = indicatif::ProgressBar::new(100);
     for i in 0..100 {
@@ -73,29 +74,3 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 }
 
-
-#[test]
-fn test_find_match() -> Result<(), Box<dyn std::error::Error>> {
-    use assert_cmd::prelude::*; // Add methods on commands
-    use std::process::Command; // Run programsa
-    use std::fs::File;
-    use predicates::prelude::*; // Used for writing assertions
-
-
-    let mut f = File::create("test_file.txt")?;
-
-    f.write_all(b"This is a test file. Testing matching patterns.\npattern1\n pattern2 \n012934102934 \n\n\n temp");
-    let mut writer = std::io::BufWriter::new(Vec::new());
-    grrs::find_match(&f,"NOT_IN_STRING",&mut writer)?;
-    assert_eq!(String::from_utf8(writer.into_inner()?)?, String::from(""));
-    //writer is now moved, so make new 
-    let mut writer = std::io::BufWriter::new(Vec::new());
-    grrs::find_match(&f,"temp",&mut writer)?;
-    assert_eq!(&writer.into_inner()?, &Vec::from("temp"));
-
-
-    Ok(())
-
-
-
-}
