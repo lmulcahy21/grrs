@@ -1,9 +1,9 @@
+use std::io::BufRead;
 
 
 // WET - Write everything twice, more than that break apart into separate functionality
 // modularize better
-pub fn find_match(f: &std::fs::File, pattern: &str, writer: &mut impl std::io::Write) -> Result<(), Box<dyn std::error::Error>>{
-    use std::io::BufRead;
+pub fn find_match(f: &mut impl std::io::Read, pattern: &str, writer: &mut impl std::io::Write) -> Result<(), Box<dyn std::error::Error>>{
     let buf_reader = std::io::BufReader::new(f);
 
     for read_result in buf_reader.lines(){

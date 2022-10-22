@@ -1,7 +1,0 @@
-This is a test file. Testing matching patterns.
-pattern1
- pattern2 
-012934102934 
-
-
- temp
